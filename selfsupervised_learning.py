@@ -21,7 +21,8 @@ from utils.lars import LARS
 from utils.simCLR_loss import SimCLR_Loss
 from tqdm import tqdm
 import shutil, time, requests, random, copy
-
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 
 
 
@@ -94,8 +95,7 @@ def plot_features(model, test_loader, save_path, epoch, device,  args):
         targets=np.append(targets, label.cpu().numpy())
 
    
-    from sklearn.manifold import TSNE
-    import matplotlib.pyplot as plt
+    
     # print('plotting t-SNE ...') 
     # tsne plot
      # Create t-SNE visualization
@@ -105,6 +105,18 @@ def plot_features(model, test_loader, save_path, epoch, device,  args):
     plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=targets, cmap='viridis')
     plt.title("t-SNE Visualization of unlabeled Features on " + args.dataset_name + " unlabelled set - epoch" + epoch)
     plt.savefig(save_path+ '/' + args.dataset_name + '_epoch'+ epoch + '.png')
+
+def plot_loss(tr_loss, val_loss, save_path):
+    plt.figure()
+    plt.plot(tr_loss, label='Training Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training and Validation Loss')
+    plt.savefig(save_path + '/loss_plot.png')
+    plt.close()
+
 
 def main():
     # Training settings
@@ -154,14 +166,16 @@ def main():
         dataset=dataset_train,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
-        shuffle=True)
+        shuffle=True,
+        drop_last=True)
     
 
     dloader_test = DataLoader(
         dataset=dataset_test,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
-        shuffle=False)
+        shuffle=False,
+        drop_last=True)
 
     dloader_unlabeled_test = CIFAR10Loader(
         root=args.dataset_root, 
@@ -232,6 +246,9 @@ def main():
         # Plot features every 10 epochs
         if (epoch) % 2 == 0:
             plot_features(model.feature_extractor, dloader_unlabeled_test, model_dir, epoch, device, args)
+        
+     # Plot and save the loss curves
+    plot_loss(tr_loss, val_loss, model_dir)   
 
 if __name__ == '__main__':
     main()
