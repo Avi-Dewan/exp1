@@ -104,7 +104,7 @@ def plot_features(model, test_loader, save_path, epoch, device,  args):
     plt.figure(figsize=(8, 6))
     plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=targets, cmap='viridis')
     plt.title("t-SNE Visualization of unlabeled Features on " + args.dataset_name + " unlabelled set - epoch" + epoch)
-    plt.savefig(save_path+ '/' + args.dataset_name + '_epoch'+ epoch + '.png')
+    plt.savefig(save_path+ '/' + args.dataset_name + '_epoch'+ str(epoch) + '.png')
 
 def plot_loss(tr_loss, val_loss, save_path):
     plt.figure()
@@ -235,7 +235,7 @@ def main():
 
         if is_best:
             torch.save(model.feature_extractor.state_dict(), args.model_dir)
-
+            print(f"Model saved to {args.model_dir}")
     
         print(f"Epoch [{epoch}/{epochs}] Training Loss: {avg_tr_loss:.4f}")
         print(f"Epoch [{epoch}/{epochs}] Validation Loss: {avg_val_loss:.4f}")
