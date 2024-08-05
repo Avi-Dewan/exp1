@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 class SimCLR_Loss(nn.Module):
     def __init__(self, batch_size, temperature):
