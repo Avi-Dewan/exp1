@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from resnet import ResNet, BasicBlock
+from models.resnet import ResNet, BasicBlock
 
 class Identity(nn.Module):
     def __init__(self):
