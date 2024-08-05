@@ -162,7 +162,7 @@ def main():
         shuffle=False)
 
     dloader_unlabeled_test = CIFAR10Loader(
-        root=args.dataset_name, 
+        root=args.dataset_root, 
         batch_size=128, 
         split='test', 
         aug=None, 
