@@ -137,7 +137,7 @@ def main():
     parser.add_argument('--dataset_name', type=str, default='cifar10', help='options: cifar10, cifar100, svhn')
     parser.add_argument('--dataset_root', type=str, default='./data/datasets/CIFAR/')
     parser.add_argument('--exp_root', type=str, default='./data/experiments/')
-    parser.add_argument('--model_name', type=str, default='rotnet')
+    parser.add_argument('--model_name', type=str, default='resnet_simCLR')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
