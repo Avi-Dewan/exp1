@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
-    parser.add_argument('--epochs', default=50, type=int) # 100
+    parser.add_argument('--epochs', default=5, type=int) # 100
     parser.add_argument('--step_size', default=10, type=int)
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--num_labeled_classes', default=5, type=int)
@@ -78,6 +78,7 @@ if __name__ == "__main__":
 
     
     state_dict = torch.load(args.pretrained_dir)
+    print("State dictionary keys:", state_dict.keys())
     del state_dict['linear.weight']
     del state_dict['linear.bias']
     model.load_state_dict(state_dict, strict=False)
