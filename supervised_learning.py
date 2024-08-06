@@ -79,8 +79,7 @@ if __name__ == "__main__":
     
     state_dict = torch.load(args.pretrained_dir)
     print("State dictionary keys:", state_dict.keys())
-    del state_dict['linear.weight']
-    del state_dict['linear.bias']
+
     model.load_state_dict(state_dict, strict=False)
     for name, param in model.named_parameters(): 
         if 'linear' not in name and 'layer4' not in name:
