@@ -128,7 +128,7 @@ def main():
     parser.add_argument('--num_workers', type=int, default=4, help='number of data loading workers')
     parser.add_argument('--seed', type=int, default=1,
                                     help='random seed (default: 1)')
-    parser.add_argument('--epochs', type=int, default=101, metavar='N',
+    parser.add_argument('--epochs', type=int, default=4, metavar='N',
                         help='number of epochs to train (default: 200)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                         help='learning rate (default: 0.1)')
@@ -231,9 +231,10 @@ def main():
         val_loss.append(avg_val_loss)
 
         is_best = avg_val_loss < worst_loss 
-        worst_loss = min(avg_val_loss, worst_loss)
 
-        if is_best:
+        if is_best and epoch % 1 == 0:
+            worst_loss = avg_val_loss
+
             torch.save(model.feature_extractor.state_dict(), args.model_dir)
             print(f"Model saved to {args.model_dir}")
     
@@ -244,8 +245,13 @@ def main():
         print(f"Epoch [{epoch}/{epochs}] Time Taken: {time_taken:.2f} minutes")
 
         # Plot features every 25 epochs
-        if (epoch) % 25 == 0:
-            plot_features(model.feature_extractor, dloader_unlabeled_test, model_dir, epoch, device, args)
+        if (epoch) % 2 == 0:
+            # plot_features(model.feature_extractor, dloader_unlabeled_test, 
+                        #   model_dir, epoch, device, args)
+        
+            epoch_model_path = os.path.join(model_dir, f'{args.model_name}_epoch{epoch + 1}.pth')
+            torch.save(model.feature_extractor.state_dict(), epoch_model_path)
+            print(f"Model saved to {epoch_model_path}")
         
      # Plot and save the loss curves
     plot_loss(tr_loss, val_loss, model_dir)   
