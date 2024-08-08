@@ -79,6 +79,21 @@ def save_model(model, optimizer, scheduler, epoch, path):
         'epoch': epoch
     }, path)
 
+    print(f"Model saved to {path}")
+
+def load_model(model, optimizer, scheduler, path, device):
+    if os.path.isfile(path):
+        checkpoint = torch.load(path, map_location=device)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        start_epoch = checkpoint['epoch'] + 1
+        print(f"Loaded model from {path}, starting from epoch {start_epoch}")
+    else:
+        print(f"No checkpoint found at {path}, starting from scratch")
+        start_epoch = 0
+    return model, optimizer, scheduler, start_epoch
+
 
 def plot_features(model, test_loader, save_path, epoch, device,  args):
     model.eval()
@@ -128,7 +143,7 @@ def main():
     parser.add_argument('--num_workers', type=int, default=4, help='number of data loading workers')
     parser.add_argument('--seed', type=int, default=1,
                                     help='random seed (default: 1)')
-    parser.add_argument('--epochs', type=int, default=4, metavar='N',
+    parser.add_argument('--epochs', type=int, default=300, metavar='N',
                         help='number of epochs to train (default: 200)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
                         help='learning rate (default: 0.1)')
@@ -138,6 +153,7 @@ def main():
     parser.add_argument('--dataset_root', type=str, default='./data/datasets/CIFAR/')
     parser.add_argument('--exp_root', type=str, default='./data/experiments/')
     parser.add_argument('--model_name', type=str, default='resnet_simCLR')
+    parser.add_argument('--load_path', type=str, default='', help='path to load a pretrained model')
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -207,14 +223,18 @@ def main():
     #LOSS FUNCTION
     criterion = SimCLR_Loss(batch_size = 128, temperature = 0.5)
 
-    epochs = args.epochs
+    start_epoch = 0
+    if args.load_path:
+        model, optimizer, mainscheduler, start_epoch = load_model(model, optimizer, mainscheduler, args.load_path, device)
+
     tr_loss = []
     val_loss = []
 
-    worst_loss = 101
+    # worst_loss = 101
+    
 
-    for epoch in range(epochs):
-        print(f"Epoch [{epoch}/{epochs}]")
+    for epoch in range(start_epoch, args.epochs):
+        print(f"Epoch [{epoch}/{args.epochs}]")
         stime = time.time()
 
         if epoch < 10:
@@ -223,38 +243,40 @@ def main():
             scheduler = mainscheduler
 
         # Train
-        avg_tr_loss = train(model, device, dloader_train, optimizer, scheduler, criterion, epoch, epochs)
+        avg_tr_loss = train(model, device, dloader_train, optimizer, scheduler, criterion, epoch, args.epochs)
         tr_loss.append(avg_tr_loss)
 
         # Evaluate
-        avg_val_loss = test(model, device, dloader_test, criterion, epoch, epochs)
+        avg_val_loss = test(model, device, dloader_test, criterion, epoch, args.epochs)
         val_loss.append(avg_val_loss)
 
-        is_best = avg_val_loss < worst_loss 
+        # is_best = avg_val_loss < worst_loss 
+        # worst_loss = min(avg_val_loss, worst_loss)
 
-        if is_best and epoch % 1 == 0:
-            worst_loss = avg_val_loss
-
-            torch.save(model.feature_extractor.state_dict(), args.model_dir)
-            print(f"Model saved to {args.model_dir}")
+        # if is_best and epoch % 10 == 0:
+        #     torch.save(model.feature_extractor.state_dict(), args.model_dir)
+        #     print(f"Model saved to {args.model_dir}")
     
-        print(f"Epoch [{epoch}/{epochs}] Training Loss: {avg_tr_loss:.4f}")
-        print(f"Epoch [{epoch}/{epochs}] Validation Loss: {avg_val_loss:.4f}")
+        print(f"Epoch [{epoch}/{args.epochs}] Training Loss: {avg_tr_loss:.4f}")
+        print(f"Epoch [{epoch}/{args.epochs}] Validation Loss: {avg_val_loss:.4f}")
 
         time_taken = (time.time() - stime) / 60
-        print(f"Epoch [{epoch}/{epochs}] Time Taken: {time_taken:.2f} minutes")
+        print(f"Epoch [{epoch}/{args.epochs}] Time Taken: {time_taken:.2f} minutes")
 
-        # Plot features every 25 epochs
-        if (epoch) % 2 == 0:
-            # plot_features(model.feature_extractor, dloader_unlabeled_test, 
-                        #   model_dir, epoch, device, args)
+        # Plot features every 50 epochs
+        if (epoch+1) % 50 == 0:
+            plot_features(model.feature_extractor, dloader_unlabeled_test, 
+                           model_dir, epoch+1, device, args)
         
             epoch_model_path = os.path.join(model_dir, f'{args.model_name}_epoch{epoch + 1}.pth')
-            torch.save(model.feature_extractor.state_dict(), epoch_model_path)
-            print(f"Model saved to {epoch_model_path}")
+            save_model(model, optimizer, scheduler, epoch, epoch_model_path)
+            
         
      # Plot and save the loss curves
-    plot_loss(tr_loss, val_loss, model_dir)   
+    plot_loss(tr_loss, val_loss, model_dir)
+
+    torch.save(model.feature_extractor.state_dict(), args.model_dir)
+    print(f"Model feature extractor saved to {args.model_dir}")
 
 if __name__ == '__main__':
     main()
