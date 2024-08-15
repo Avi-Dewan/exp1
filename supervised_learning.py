@@ -91,7 +91,7 @@ if __name__ == "__main__":
     model.load_state_dict(state_dict, strict=False)
     for name, param in model.named_parameters(): 
         # if 'linear' not in name and 'layer4' not in name:
-        if 'linear' not in name and 'layer4' not in name and 'layer3' not in name:
+        if 'linear' not in name:
             param.requires_grad = False
  
     if args.dataset_name == 'cifar10':
