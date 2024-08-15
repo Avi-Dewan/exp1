@@ -266,7 +266,7 @@ if __name__ == "__main__":
     model.center= Parameter(torch.Tensor(args.n_clusters, args.n_clusters))
     model.center.data = torch.tensor(init_centers).float().to(device)
 
-    print(model.summary)
+    print(model)
     print('---------------------------------')
     for name, param in model.named_parameters(): 
         # if 'linear' not in name:
