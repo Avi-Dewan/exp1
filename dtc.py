@@ -266,6 +266,13 @@ if __name__ == "__main__":
     model.center= Parameter(torch.Tensor(args.n_clusters, args.n_clusters))
     model.center.data = torch.tensor(init_centers).float().to(device)
 
+    print(model.summary)
+    print('---------------------------------')
+    for name, param in model.named_parameters(): 
+        # if 'linear' not in name:
+        #     param.requires_grad = False
+        print(name)
+
     warmup_train(model, train_loader, eval_loader, args)
     if args.DTC == 'Baseline':
         Baseline_train(model, train_loader, eval_loader, args)
