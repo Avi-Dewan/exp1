@@ -11,6 +11,7 @@ from data.svhnloader import SVHNLoader
 from tqdm import tqdm
 import numpy as np
 import os
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 def train(model, train_loader, labeled_eval_loader, args):
     optimizer = SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
@@ -33,18 +34,27 @@ def train(model, train_loader, labeled_eval_loader, args):
         test(model, labeled_eval_loader, args)
 
 def test(model, test_loader, args):
-    model.eval() 
-    preds=np.array([])
-    targets=np.array([])
+    model.eval()
+    preds = []
+    targets = []
+    
     for batch_idx, (x, label, _) in enumerate(tqdm(test_loader)):
         x, label = x.to(device), label.to(device)
         output = model(x)
         _, pred = output.max(1)
-        targets=np.append(targets, label.cpu().numpy())
-        preds=np.append(preds, pred.cpu().numpy())
-    acc, nmi, ari = cluster_acc(targets.astype(int), preds.astype(int)), nmi_score(targets, preds), ari_score(targets, preds) 
-    print('Test acc {:.4f}, nmi {:.4f}, ari {:.4f}'.format(acc, nmi, ari))
-    return preds 
+        targets.extend(label.cpu().numpy())
+        preds.extend(pred.cpu().numpy())
+    
+    # Calculate metrics using sklearn
+    accuracy = accuracy_score(targets, preds)
+    precision = precision_score(targets, preds, average='macro')
+    recall = recall_score(targets, preds, average='macro')
+    f1 = f1_score(targets, preds, average='macro')
+
+    # Print metrics in a single line
+    print('Test Accuracy: {:.4f}, Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}'.format(accuracy, precision, recall, f1))
+
+    return preds
 
 if __name__ == "__main__":
     import argparse
@@ -80,8 +90,8 @@ if __name__ == "__main__":
     state_dict = torch.load(args.pretrained_dir)
     model.load_state_dict(state_dict, strict=False)
     for name, param in model.named_parameters(): 
-        # if 'linear' not in name and 'layer4' not in name:
-        if 'linear' not in name and 'layer4' not in name and 'layer3' not in name:
+        if 'linear' not in name and 'layer4' not in name:
+        # if 'linear' not in name and 'layer4' not in name and 'layer3' not in name:
             param.requires_grad = False
  
     if args.dataset_name == 'cifar10':
