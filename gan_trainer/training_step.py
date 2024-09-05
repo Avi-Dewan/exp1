@@ -59,8 +59,8 @@ def generator_train_step(discriminator, generator, g_optimizer, criterion,
     if labels is None:
         assert isinstance(n_classes, int), 'n_classes must be of type int when labels are not given'
         labels = Variable(torch.LongTensor(np.random.randint(0, n_classes, batch_size))).to(device)
-    print("labels shape from generator_train_step")
-    print(labels.shape)
+    # print("labels shape from generator_train_step")
+    # print(labels.shape)
     fake_images = generator(generator_input, labels)
 
     validity = discriminator(fake_images, labels)
