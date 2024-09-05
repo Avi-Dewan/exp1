@@ -122,7 +122,7 @@ def gan_pretraining(generator, discriminator, classifier, loader_train,
             print(f'Starting epoch {epoch}/{n_epochs}...', end=' ')
             g_loss_list = []
             d_loss_list = []
-            for i, (images, _) in enumerate(loader_train):
+            for i, ((images, _), _, _) in enumerate(loader_train):
 
                 real_images = Variable(images).to(device)
                 _, labels = torch.max(classifier(real_images), dim=1)
