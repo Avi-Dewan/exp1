@@ -51,6 +51,8 @@ class Generator(nn.Module):
         """
         latent_space = latent_space.view(latent_space.size(0), self.latent_dim)
         labels = self.label_emb(labels)
+        print("labels shape from generator forward")
+        print(labels.shape)
         inputs = torch.cat([latent_space, labels], 1)
         out = self.model(inputs)
         return out.view(inputs.size(0), self.img_size, self.img_size, 3)  # Adjusted for RGB
