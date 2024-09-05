@@ -1,18 +1,61 @@
 import argparse
 import os
 import numpy as np
+import tqdm
 from torchvision.utils import save_image
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
 from utils.metrics import accuracy, class_accuracy
+
+
 from utils.util import generated_sample
 from models.gan_model import Generator, Discriminator
 from gan_trainer.training_step import classifier_train_step, generator_train_step, discriminator_train_step
 from gan_trainer.pretraining import gan_pretraining
+
 from data.cifarloader import CIFAR10Loader
 from models.resnet import ResNet, BasicBlock
+from modules.module import feat2prob, target_distribution 
+from sklearn.metrics.cluster import normalized_mutual_info_score as nmi_score
+from sklearn.metrics import adjusted_rand_score as ari_score
+from utils.util import cluster_acc
+
+
+def test(model, test_loader, args, tsne=False):
+    model.eval()
+    preds=np.array([])
+    targets=np.array([])
+    feats = np.zeros((len(test_loader.dataset), args.n_classes))
+    probs= np.zeros((len(test_loader.dataset), args.n_classes))
+    device = next(model.parameters()).device
+    for batch_idx, (x, label, idx) in enumerate(tqdm(test_loader)):
+        x, label = x.to(device), label.to(device)
+        feat = model(x)
+        prob = feat2prob(feat, model.center)
+        _, pred = prob.max(1)
+        targets=np.append(targets, label.cpu().numpy())
+        preds=np.append(preds, pred.cpu().numpy())
+        idx = idx.data.cpu().numpy()
+        feats[idx, :] = feat.cpu().detach().numpy()
+        probs[idx, :] = prob.cpu().detach().numpy()
+    acc, nmi, ari = cluster_acc(targets.astype(int), preds.astype(int)), nmi_score(targets, preds), ari_score(targets, preds)
+    print('Test acc {:.4f}, nmi {:.4f}, ari {:.4f}'.format(acc, nmi, ari))
+    probs = torch.from_numpy(probs)
+
+    if tsne:
+        from sklearn.manifold import TSNE
+        import matplotlib.pyplot as plt
+        # tsne plot
+         # Create t-SNE visualization
+        X_embedded = TSNE(n_components=2).fit_transform(feats)  # Use meaningful features for t-SNE
+
+        plt.figure(figsize=(8, 6))
+        plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=targets, cmap='viridis')
+        plt.title("t-SNE Visualization of Learned Features on Unlabelled CIFAR-10 Subset")
+        plt.savefig(args.model_folder+'/tsne.png')
+    return acc, nmi, ari, probs 
 
 # Argument parser setup
 parser = argparse.ArgumentParser(description='Generative Pseudo-label Refinement for Unsupervised Domain Adaptation',
@@ -73,8 +116,10 @@ classifier = ResNet(BasicBlock, [2, 2, 2, 2], args.n_classes).to(args.device)
 state_dict = torch.load(args.cls_pretraining_path)
 classifier.load_state_dict(state_dict, strict=False)
 
-if args.verbose:
-    class_accuracy(classifier, eval_loader, list(range(5, 10)))
+init_acc, init_nmi, init_ari, _ = test(classifier, eval_loader, args)
+
+# if args.verbose:
+#     class_accuracy(classifier, eval_loader, list(range(5, 10)))
 
 # GAN pretraining on target data annotated by classifier
 generator = Generator(args.n_classes, args.latent_dim, args.img_size).to(args.device)
@@ -168,7 +213,13 @@ print('\n')
 # --------------------
 #     Final Model
 # --------------------
-print(f'MNIST accuracy: {100*accuracy(classifier, eval_loader)::.2f}%')
-class_accuracy(classifier, eval_loader, list(range(5, 10)))
-if args.verbose:
-    generated_sample(generator, args.n_classes, args.latent_dim, args.img_size)
+
+acc, nmi, ari, _ = test(classifier, eval_loader, args)
+print('Init ACC {:.4f}, NMI {:.4f}, ARI {:.4f}'.format(init_acc, init_nmi, init_ari))
+print('Final ACC {:.4f}, NMI {:.4f}, ARI {:.4f}'.format(acc, nmi, ari))
+
+
+# print(f'MNIST accuracy: {100*accuracy(classifier, eval_loader)::.2f}%')
+# class_accuracy(classifier, eval_loader, list(range(5, 10)))
+# if args.verbose:
+#     generated_sample(generator, args.n_classes, args.latent_dim, args.img_size)
