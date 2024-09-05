@@ -31,7 +31,7 @@ parser.add_argument('--device', type=str, default='cuda', choices=['cuda', 'cpu'
 parser.add_argument('--n_classes', type=int, default=5)
 
 # Classifier pretraining parameters
-parser.add_argument('--n_epochs_cls_pretraining', type=int, default=25)
+parser.add_argument('--n_epochs_cls_pretraining', type=int, default=1)
 parser.add_argument('--lr_cls_pretraining', type=float, default=1e-4)
 
 # GAN pretraining parameters
@@ -133,7 +133,13 @@ for epoch in range(args.n_epochs_training):
         real_images = Variable(images).to(args.device)
 
         # Step 7: Infer labels using classifier
+        x = classifier(real_images)
+        print(x.shape)
         _, labels_classifier = torch.max(classifier(real_images), dim=1)
+
+        print(labels_classifier.shape)
+
+        break
 
         # Step 8: Update discriminator
         d_loss = discriminator_train_step(discriminator, generator, d_optimizer, gan_criterion,
