@@ -38,7 +38,7 @@ parser.add_argument('--lr_cls_pretraining', type=float, default=1e-4)
 parser.add_argument('--latent_dim', type=int, default=100)
 parser.add_argument('--lr_d_pretraining', type=float, default=1e-4)
 parser.add_argument('--lr_g_pretraining', type=float, default=1e-4)
-parser.add_argument('--n_epochs_gan_pretraining', type=int, default=30)
+parser.add_argument('--n_epochs_gan_pretraining', type=int, default=1)
 
 # Training parameters
 parser.add_argument('--lr_cls_training', type=float, default=1e-4)
