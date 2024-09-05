@@ -1,7 +1,7 @@
 import argparse
 import os
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from torchvision.utils import save_image
 import torch
 import torch.nn as nn
