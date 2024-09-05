@@ -1,7 +1,6 @@
 import bisect
 import warnings
 
-from torch._utils import _accumulate
 from torch import randperm
 
 
