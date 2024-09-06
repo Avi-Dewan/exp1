@@ -111,7 +111,11 @@ eval_loader = CIFAR10Loader(root=args.data_path, batch_size=args.batch_size, spl
 # Classifier pretraining on source data
 classifier = ResNet(BasicBlock, [2, 2, 2, 2], args.n_classes).to(args.device)
 state_dict = torch.load(args.cls_pretraining_path)
-classifier.load_state_dict(state_dict, strict=False)
+# Load the model and center
+checkpoint = torch.load(args.cls_pretraining_path)
+classifier.load_state_dict(checkpoint['model_state_dict'], strict=False)
+classifier.center = torch.nn.Parameter(checkpoint['center'].to(args.device))
+
 
 init_acc, init_nmi, init_ari, _ = test(classifier, eval_loader, args)
 
