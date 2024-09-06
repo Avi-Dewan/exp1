@@ -237,7 +237,7 @@ if __name__ == "__main__":
     parser.add_argument('--exp_root', type=str, default='./data/experiments/')
     parser.add_argument('--model_name', type=str, default='resnet18')
     parser.add_argument('--save_txt_name', type=str, default='result.txt')
-    parser.add_argument('--DTC', type=str, default='PI')
+    parser.add_argument('--DTC', type=str, default='TE')
     args = parser.parse_args()
     args.cuda = torch.cuda.is_available()
     device = torch.device("cuda" if args.cuda else "cpu")
@@ -269,7 +269,7 @@ if __name__ == "__main__":
     print(model)
     print('---------------------------------')
     for name, param in model.named_parameters(): 
-        if 'linear' and 'layer4' not in name:
+        if 'linear' not in name and 'layer4' not in name:
             param.requires_grad = False
         print(name)
 
