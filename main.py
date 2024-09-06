@@ -27,15 +27,18 @@ def test(model, test_loader, args, tsne=False):
     model.eval()
     preds=np.array([])
     targets=np.array([])
-    probs= np.zeros((len(test_loader.dataset), args.n_classes))
+    feats = np.zeros((len(test_loader.dataset), args.n_clusters))
+    probs= np.zeros((len(test_loader.dataset), args.n_clusters))
     device = next(model.parameters()).device
     for batch_idx, (x, label, idx) in enumerate(tqdm(test_loader)):
         x, label = x.to(device), label.to(device)
-        prob = model(x)
+        feat = model(x)
+        prob = feat2prob(feat, model.center)
         _, pred = prob.max(1)
         targets=np.append(targets, label.cpu().numpy())
         preds=np.append(preds, pred.cpu().numpy())
         idx = idx.data.cpu().numpy()
+        feats[idx, :] = feat.cpu().detach().numpy()
         probs[idx, :] = prob.cpu().detach().numpy()
     acc, nmi, ari = cluster_acc(targets.astype(int), preds.astype(int)), nmi_score(targets, preds), ari_score(targets, preds)
     print('Test acc {:.4f}, nmi {:.4f}, ari {:.4f}'.format(acc, nmi, ari))
@@ -46,7 +49,7 @@ def test(model, test_loader, args, tsne=False):
         import matplotlib.pyplot as plt
         # tsne plot
          # Create t-SNE visualization
-        X_embedded = TSNE(n_components=2).fit_transform(probs)  # Use meaningful features for t-SNE
+        X_embedded = TSNE(n_components=2).fit_transform(feats)  # Use meaningful features for t-SNE
 
         plt.figure(figsize=(8, 6))
         plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=targets, cmap='viridis')
@@ -116,8 +119,10 @@ checkpoint = torch.load(args.cls_pretraining_path)
 classifier.load_state_dict(checkpoint['model_state_dict'], strict=False)
 classifier.center = torch.nn.Parameter(checkpoint['center'].to(args.device))
 
-
 init_acc, init_nmi, init_ari, _ = test(classifier, eval_loader, args)
+
+
+# classifier = ResNet(BasicBlock, [2, 2, 2, 2], args.n_classes).to(args.device)
 
 # if args.verbose:
 #     class_accuracy(classifier, eval_loader, list(range(5, 10)))

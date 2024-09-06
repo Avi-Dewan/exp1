@@ -80,12 +80,7 @@ def Baseline_train(model, train_loader, eva_loader, args):
         if epoch % args.update_interval ==0:
             print('updating target ...')
             args.p_targets = target_distribution(probs) 
-
-    # Save the model including the center
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'center': model.center.data  # explicitly saving the center
-    }, args.model_dir)
+    torch.save(model.state_dict(), args.model_dir)
     print("model saved to {}.".format(args.model_dir))
 
 
@@ -114,11 +109,7 @@ def PI_train(model, train_loader, eva_loader, args):
         if epoch % args.update_interval ==0:
             print('updating target ...')
             args.p_targets = target_distribution(probs) 
-    # Save the model including the center
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'center': model.center.data  # explicitly saving the center
-    }, args.model_dir)
+    torch.save(model.state_dict(), args.model_dir)
     print("model saved to {}.".format(args.model_dir))
 
 def TE_train(model, train_loader, eva_loader, args):
@@ -154,11 +145,7 @@ def TE_train(model, train_loader, eva_loader, args):
         if epoch % args.update_interval ==0:
             print('updating target ...')
             args.p_targets = target_distribution(probs) 
-    # Save the model including the center
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'center': model.center.data  # explicitly saving the center
-    }, args.model_dir)
+    torch.save(model.state_dict(), args.model_dir)
     print("model saved to {}.".format(args.model_dir))
 
 def TEP_train(model, train_loader, eva_loader, args):
@@ -190,11 +177,7 @@ def TEP_train(model, train_loader, eva_loader, args):
         if epoch % args.update_interval ==0:
             print('updating target ...')
             args.p_targets = target_distribution(z_bars) 
-    # Save the model including the center
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'center': model.center.data  # explicitly saving the center
-    }, args.model_dir)
+    torch.save(model.state_dict(), args.model_dir)
     print("model saved to {}.".format(args.model_dir))
 
 def test(model, test_loader, args, tsne=False):
