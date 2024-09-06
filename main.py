@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
-from utils.metrics import accuracy, class_accuracy
 
 
 from utils.util import generated_sample
