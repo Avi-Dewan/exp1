@@ -274,6 +274,8 @@ if __name__ == "__main__":
         print(name)
 
     warmup_train(model, train_loader, eval_loader, args)
+
+    print('------------------- now for the main model --------------')
     if args.DTC == 'Baseline':
         Baseline_train(model, train_loader, eval_loader, args)
     elif args.DTC == 'PI':
