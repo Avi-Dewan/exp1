@@ -42,7 +42,7 @@ def test(model, test_loader, args):
         x, label = x.to(device), label.to(device)
         output = model(x)
         _, pred = output.max(1)
-        # pred = pred + 5
+        pred = pred + 5
         targets.extend(label.cpu().numpy())
         preds.extend(pred.cpu().numpy())
     
